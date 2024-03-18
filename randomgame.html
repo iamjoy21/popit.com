@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Balloon Game</title>
+<style>
+  body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #87CEEB; /* Sky blue background */
+  }
+  #balloon {
+    position: absolute;
+    width: 50px;
+    height: 50px;
+    background-color: red; /* Red balloon */
+    border-radius: 50%;
+  }
+  .needle {
+    position: absolute;
+    background-color: #2F4F4F; /* Dark slate gray needles */
+    width: 5px;
+    height: 100px;
+  }
+  #game-over {
+    display: none;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Arial', sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #FF6347; /* Tomato red text */
+  }
+</style>
+</head>
+<body>
+<div id="game-over">GAME OVER<br><button onclick="restartGame()">Restart</button></div>
+<div id="balloon"></div>
+<script>
+  const balloon = document.getElementById('balloon');
+  const gameOverMessage = document.getElementById('game-over');
+  let gameIsOver = false;
+
+  // Initial balloon position
+  let balloonX = window.innerWidth / 2 - 25;
+  let balloonY = window.innerHeight / 2 - 25;
+  balloon.style.left = balloonX + 'px';
+  balloon.style.top = balloonY + 'px';
+
+  function moveBalloon(event) {
+    if (!gameIsOver) {
+      const touch = event.touches[0];
+      const touchX = touch.clientX;
+      const touchY = touch.clientY;
+      balloonX = Math.max(0, Math.min(window.innerWidth - 50, touchX - 25));
+      balloonY = Math.max(0, Math.min(window.innerHeight - 50, touchY - 25));
+      balloon.style.left = balloonX + 'px';
+      balloon.style.top = balloonY + 'px';
+      checkCollision();
+    }
+  }
+
+  function createNeedle() {
+    const needle = document.createElement('div');
+    needle.className = 'needle';
+    const randomLeft = Math.floor(Math.random() * (window.innerWidth - 5));
+    needle.style.left = randomLeft + 'px';
+    document.body.appendChild(needle);
+
+    const needleInterval = setInterval(() => {
+      const currentTop = parseInt(needle.style.top) || 0;
+      needle.style.top = currentTop + 2 + 'px';
+      if (currentTop > window.innerHeight) {
+        clearInterval(needleInterval);
+        document.body.removeChild(needle);
+      }
+      checkCollision();
+    }, 20);
+  }
+
+  function checkCollision() {
+    const balloonRect = balloon.getBoundingClientRect();
+    const needles = document.getElementsByClassName('needle');
+    for (let needle of needles) {
+      const needleRect = needle.getBoundingClientRect();
+      if (balloonRect.left < needleRect.right &&
+          balloonRect.right > needleRect.left &&
+          balloonRect.top < needleRect.bottom &&
+          balloonRect.bottom > needleRect.top) {
+        endGame();
+        return;
+      }
+    }
+  }
+
+  function endGame() {
+    gameIsOver = true;
+    gameOverMessage.style.display = 'block';
+  }
+
+  function restartGame() {
+    gameIsOver = false;
+    gameOverMessage.style.display = 'none';
+    balloonX = window.innerWidth / 2 - 25;
+    balloonY = window.innerHeight / 2 - 25;
+    balloon.style.left = balloonX + 'px';
+    balloon.style.top = balloonY + 'px';
+    const needles = document.getElementsByClassName('needle');
+    while (needles.length > 0) {
+      needles[0].parentNode.removeChild(needles[0]);
+    }
+  }
+
+  document.addEventListener('touchmove', moveBalloon);
+
+  // Start the game
+  setInterval(createNeedle, 2000);
+</script>
+</body>
+</html>
